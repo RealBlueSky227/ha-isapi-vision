@@ -1,10 +1,12 @@
 """Real local TLS transport through HA's shared sessions, with no committed key material."""
 
+import asyncio
 import ssl
 from datetime import UTC, datetime
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
 
 import pytest
-from aiohttp import web
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -16,7 +18,7 @@ from custom_components.isapi_vision.client import make_client
 
 @pytest.mark.enable_socket
 @pytest.mark.parametrize("verify", [True, False])
-async def test_shared_session_respects_certificate_setting(hass, aiohttp_server, tmp_path, verify):
+async def test_shared_session_respects_certificate_setting(hass, tmp_path, verify):
     key = ec.generate_private_key(ec.SECP256R1())
     subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "test-camera.invalid")])
     certificate = (
@@ -38,33 +40,50 @@ async def test_shared_session_respects_certificate_setting(hass, aiohttp_server,
     key_path.chmod(0o600)
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     context.load_cert_chain(cert_path, key_path)
-    schemes = []
+    tls_versions = []
 
-    async def device(request):
-        schemes.append(request.scheme)
-        return web.Response(
-            text="<DeviceInfo><serialNumber>TEST-TLS</serialNumber></DeviceInfo>", content_type="application/xml"
-        )
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            assert self.path == "/ISAPI/System/deviceInfo"
+            tls_versions.append(self.connection.version())
+            payload = b"<DeviceInfo><serialNumber>TEST-TLS</serialNumber></DeviceInfo>"
+            self.send_response(200)
+            self.send_header("Content-Type", "application/xml")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
 
-    app = web.Application()
-    app.router.add_get("/ISAPI/System/deviceInfo", device)
-    server = await aiohttp_server(app, ssl=context)
+        def log_message(self, *args):
+            pass
+
+    # Isolate the test server from HA's event loop. A client's intentional certificate
+    # rejection is handled by the server's socket accept path, not as an HA background error.
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    server.socket = context.wrap_socket(server.socket, server_side=True)
+    thread = Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
+    thread.start()
     client = make_client(
         hass,
         {
             "host": "127.0.0.1",
             "username": "synthetic-account",
             "password": "synthetic-password",
-            "port": server.port,
+            "port": server.server_port,
             "use_ssl": True,
             "verify_ssl": verify,
             "channel": 1,
         },
     )
-    if verify:
-        with pytest.raises(CameraCertificateError):
-            await client.device_info()
-        assert schemes == []
-    else:
-        assert (await client.device_info())["serialNumber"] == "TEST-TLS"
-        assert schemes == ["https"]
+    try:
+        if verify:
+            with pytest.raises(CameraCertificateError):
+                await client.device_info()
+            assert tls_versions == []
+        else:
+            assert (await client.device_info())["serialNumber"] == "TEST-TLS"
+            assert len(tls_versions) == 1 and tls_versions[0].startswith("TLS")
+    finally:
+        await asyncio.to_thread(server.shutdown)
+        server.server_close()
+        thread.join(timeout=5)
+        assert not thread.is_alive()

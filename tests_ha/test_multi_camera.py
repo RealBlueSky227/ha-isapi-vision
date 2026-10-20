@@ -4,6 +4,7 @@ import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from yarl import URL
@@ -46,9 +47,10 @@ async def test_multiple_cameras_and_reload_keep_registered_ids(hass):
     for entry in entries:
         entry.add_to_hass(hass)
     with patch("custom_components.isapi_vision.make_client", side_effect=lambda hass, data: clients[data["host"]]):
-        for entry in entries:
-            assert await hass.config_entries.async_setup(entry.entry_id)
+        # Initial domain setup loads all existing entries, including the second camera.
+        assert await hass.config_entries.async_setup(entries[0].entry_id)
         await hass.async_block_till_done()
+        assert all(entry.state is ConfigEntryState.LOADED for entry in entries)
         assert hass.states.get("binary_sensor.driveway_person_detected").state == "on"
         assert hass.states.get("binary_sensor.driveway_vehicle_detected").state == "off"
         assert hass.states.get("binary_sensor.garage_person_detected").state == "off"
