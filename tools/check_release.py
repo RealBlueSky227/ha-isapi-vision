@@ -56,6 +56,7 @@ def validate():
     assert manifest["issue_tracker"] == REPOSITORY + "/issues"
     assert manifest["iot_class"] == "local_push" and manifest["config_flow"] is True
     assert manifest["requirements"] == []
+    assert (component / "LICENSE").read_bytes() == (ROOT / "LICENSE").read_bytes()
     assert hacs["homeassistant"] == "2025.7.0"
     assert len([path for path in component.parent.iterdir() if path.is_dir() and path.name != "__pycache__"]) == 1
     assert json.loads((component / "strings.json").read_text()) == json.loads(
