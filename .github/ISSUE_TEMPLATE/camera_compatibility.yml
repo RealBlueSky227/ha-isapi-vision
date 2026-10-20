@@ -1,0 +1,46 @@
+name: Camera compatibility report
+description: Share confirmed or experimental model/firmware results.
+labels: [compatibility]
+body:
+  - type: markdown
+    attributes:
+      value: Separate API capability discovery from physically observed detections. Do not include passwords, tokens, private addresses, serial numbers, snapshots or raw XML.
+  - type: input
+    id: model
+    attributes:
+      label: Manufacturer and model (including model reported by ISAPI)
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware version
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: ISAPI Vision and Home Assistant versions
+    validations:
+      required: true
+  - type: textarea
+    id: discovery
+    attributes:
+      label: Discovered features and endpoint results
+      description: Supported/unsupported/unknown, configured enabled state and sanitized evidence. Missing paths alone do not prove a whole feature unsupported.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Actual physical tests and limitations
+      description: Which person/vehicle/motion/smart events were really triggered? Did OFF timing, debounce, disconnect/reconnect, HA restart and snapshots work? Mark untested checks explicitly.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy review
+      options:
+        - label: I removed credentials and identifying camera/network information from this report and its attachments.
+          required: true

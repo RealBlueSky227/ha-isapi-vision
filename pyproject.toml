@@ -1,0 +1,18 @@
+[project]
+name = "isapi-vision-home-assistant"
+version = "0.1.0b1"
+description = "Read-only ISAPI Vision custom integration for Home Assistant"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests_ha"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]

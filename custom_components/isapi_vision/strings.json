@@ -1,0 +1,108 @@
+{
+  "title": "ISAPI Vision",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect an ISAPI camera",
+        "description": "Use the camera's local ISAPI credentials. Set HTTP/HTTPS and its matching port explicitly. One entry monitors one camera channel. Enable camera event detection and Notify Surveillance Center in the camera UI.",
+        "data": {
+          "host": "Camera IP or hostname",
+          "username": "Username",
+          "password": "Password",
+          "port": "HTTP/HTTPS port",
+          "use_ssl": "Use HTTPS",
+          "verify_ssl": "Verify HTTPS certificate",
+          "channel": "Camera channel"
+        },
+        "data_description": {
+          "host": "Local camera IP or hostname, without a URL, port or path.",
+          "username": "A camera account allowed to read ISAPI settings and receive events.",
+          "password": "Your camera password. It is saved in Home Assistant's config entry and never filled back into this form. On reconfigure or reauthentication, leave blank to keep it.",
+          "port": "HTTP or HTTPS port configured on the camera (usually 80 or 443).",
+          "use_ssl": "Use HTTPS for encrypted camera traffic; set the matching HTTPS port.",
+          "verify_ssl": "Validate the HTTPS certificate, including the hostname/IP match. Self-signed or mismatched camera certificates may require disabling this; traffic stays encrypted but camera identity is not verified.",
+          "channel": "Video input number, usually 1 for a standalone camera. This selects the input to monitor; it does not change camera settings or select main/substream."
+        }
+      },
+      "reconfigure": {
+        "title": "Edit camera connection",
+        "description": "Leave the password blank to keep the saved password. This must be the same camera and channel.",
+        "data": {
+          "host": "Camera IP or hostname",
+          "username": "Username",
+          "password": "New password (optional)",
+          "port": "HTTP/HTTPS port",
+          "use_ssl": "Use HTTPS",
+          "verify_ssl": "Verify HTTPS certificate",
+          "channel": "Camera channel"
+        },
+        "data_description": {
+          "host": "Local camera IP or hostname, without a URL, port or path.",
+          "username": "A camera account allowed to read ISAPI settings and receive events.",
+          "password": "Your camera password. It is saved in Home Assistant's config entry and never filled back into this form. On reconfigure or reauthentication, leave blank to keep it.",
+          "port": "HTTP or HTTPS port configured on the camera (usually 80 or 443).",
+          "use_ssl": "Use HTTPS for encrypted camera traffic; set the matching HTTPS port.",
+          "verify_ssl": "Validate the HTTPS certificate, including the hostname/IP match. Self-signed or mismatched camera certificates may require disabling this; traffic stays encrypted but camera identity is not verified.",
+          "channel": "Video input number, usually 1 for a standalone camera. This selects the input to monitor; it does not change camera settings or select main/substream."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Repair camera authentication",
+        "description": "Check the credentials and ISAPI permissions for this camera. Leave the password blank to keep it.",
+        "data": {
+          "host": "Camera IP or hostname",
+          "username": "Username",
+          "password": "New password (optional)",
+          "port": "HTTP/HTTPS port",
+          "use_ssl": "Use HTTPS",
+          "verify_ssl": "Verify HTTPS certificate",
+          "channel": "Camera channel"
+        },
+        "data_description": {
+          "host": "Local camera IP or hostname, without a URL, port or path.",
+          "username": "A camera account allowed to read ISAPI settings and receive events.",
+          "password": "Your camera password. It is saved in Home Assistant's config entry and never filled back into this form. On reconfigure or reauthentication, leave blank to keep it.",
+          "port": "HTTP or HTTPS port configured on the camera (usually 80 or 443).",
+          "use_ssl": "Use HTTPS for encrypted camera traffic; set the matching HTTPS port.",
+          "verify_ssl": "Validate the HTTPS certificate, including the hostname/IP match. Self-signed or mismatched camera certificates may require disabling this; traffic stays encrypted but camera identity is not verified.",
+          "channel": "Video input number, usually 1 for a standalone camera. This selects the input to monitor; it does not change camera settings or select main/substream."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot read ISAPI device information. Check the address, port, camera access settings, and certificate.",
+      "invalid_auth": "The camera rejected the credentials or device information permission.",
+      "invalid_host": "Enter only a hostname or IP address, without a URL, port, or path.",
+      "wrong_device": "This address or channel belongs to a different camera. Add it as a separate entry.",
+      "password_required": "Enter a camera password.",
+      "unknown": "Unexpected connection error. Check the Home Assistant log for the generic error category and try again.",
+      "invalid_certificate": "The camera's HTTPS certificate could not be verified. Use a trusted certificate matching its hostname, or disable Verify HTTPS certificate if the camera's identity has been verified separately."
+    },
+    "abort": {
+      "already_configured": "This camera channel is already configured.",
+      "reauth_successful": "Camera authentication updated.",
+      "reconfigure_successful": "Camera connection updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Camera monitoring options",
+        "description": "Detections turn on immediately. After a trigger ends, the off debounce keeps the sensor on for the configured delay. A new trigger cancels the pending off transition. Camera health/availability is not debounced.",
+        "data": {
+          "alarm_hold": "Missing end-event timeout (seconds; 0 disables)",
+          "parameter_entities": "Create optional diagnostic parameter entities",
+          "debounce_seconds": "Sensor off debounce (seconds)"
+        },
+        "data_description": {
+          "alarm_hold": "Fallback when the camera never sends an inactive event: infer the end after this many seconds without an active update, then apply the off debounce. Set 0 to wait for an explicit inactive event.",
+          "debounce_seconds": "Keep detection sensors HIGH for this many seconds after the last trigger ends. New activity cancels the pending LOW transition. 0 clears immediately. Applies to detected alarms, not connection diagnostics.",
+          "parameter_entities": "Create disabled diagnostic entities for readable camera parameters. Enable individual entities as needed."
+        }
+      }
+    },
+    "error": {
+      "invalid_options": "Enter a timeout and debounce between 0 and 3600 seconds."
+    }
+  }
+}

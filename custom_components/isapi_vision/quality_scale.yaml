@@ -1,0 +1,28 @@
+# Community self-audit against HA Bronze rules; not an awarded HA Core tier.
+rules:
+  action-setup:
+    status: exempt
+    comment: This read-only integration registers no custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency:
+    status: exempt
+    comment: No extra runtime requirements; uses Python and libraries supplied by HA.
+  docs-actions:
+    status: exempt
+    comment: No custom actions; README documents the standard camera snapshot entity.
+  docs-conditions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done

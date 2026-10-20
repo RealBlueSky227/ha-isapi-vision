@@ -1,0 +1,30 @@
+# Add as a manual card. Replace IDs with the actual entities on your device page.
+type: vertical-stack
+cards:
+  - type: picture-entity
+    entity: camera.driveway_snapshot
+    name: Driveway
+    camera_view: auto
+    show_state: false
+  - type: horizontal-stack
+    cards:
+      - type: tile
+        entity: binary_sensor.driveway_person_detected
+        name: Person
+        icon: mdi:walk
+        color: amber
+      - type: tile
+        entity: binary_sensor.driveway_vehicle_detected
+        name: Vehicle
+        icon: mdi:car
+        color: blue
+  - type: tile
+    entity: binary_sensor.driveway_motion_detected
+    name: Motion
+    icon: mdi:motion-sensor
+  - type: entities
+    title: Camera health
+    entities:
+      - binary_sensor.driveway_camera_connection
+      - binary_sensor.driveway_event_stream_connection
+      - sensor.driveway_last_event

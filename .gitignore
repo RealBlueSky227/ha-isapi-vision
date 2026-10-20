@@ -1,0 +1,17 @@
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+.venv/
+camera-inventory.json
+camera-inventory*.json
+.storage/
+.env
+.env.*
+secrets.yaml
+*.log
+*.pem
+*.key
+*.zip
+.coverage*
+coverage.xml
+htmlcov/
