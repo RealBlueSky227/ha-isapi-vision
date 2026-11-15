@@ -17,6 +17,9 @@ async def async_get_config_entry_diagnostics(hass, entry) -> dict:
         "endpoint_status": coordinator.data.endpoints,
         "endpoint_probes": coordinator.data.probes,
         "features": feature_report(coordinator.features),
+        "active_defense_controls": {
+            key: {"evidence": control.evidence} for key, control in coordinator.data.controls.items()
+        },
         "parameters": coordinator.data.parameters,
         "limits": {
             "xml_bytes_per_response": 1048576,

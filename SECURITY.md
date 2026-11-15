@@ -1,6 +1,8 @@
 # Credential and data handling
 
-The integration is local and read-only. It authenticates using HTTP Digest, sends GET requests only, disables redirects, and never embeds credentials in URLs. Use a camera account with only the permissions needed to read settings, snapshots and events. Prefer HTTPS with certificate validation when the camera supports it. HTTP Digest authenticates requests; HTTP by itself does not encrypt images or settings traffic.
+The integration is local. Discovery, polling, snapshots and events use read-only requests; positively discovered active-defense buttons send a bounded PUT only when explicitly pressed. It authenticates using HTTP Digest, disables redirects, and never embeds credentials in URLs. Use a dedicated camera account with only the permissions needed for the features you enable. Prefer HTTPS with certificate validation when the camera supports it. HTTP Digest authenticates requests; HTTP by itself does not encrypt images, settings or output commands.
+
+Audible and flashing alarms can affect people and property. Setup and polling never activate them. Treat `button.press` permission as active-defense authority, test while on site, and protect automations against loops or untrusted triggers. The integration does not change alarm schedules or linkage configuration.
 
 Passwords are accepted through HA's password selector and stored in the normal config entry. They are not schema defaults, including after errors, reconfiguration or reauthentication. Leaving the optional password blank preserves the saved password. Passwords are passed verbatim; whitespace and Unicode are not stripped. This integration does not encrypt HA's config entry storage independently: protect your HA configuration directory and backups.
 

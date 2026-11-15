@@ -22,4 +22,13 @@ actions:
 
 The off debounce affects sensor states and automations using them. The event entity remains immediate: trigger on changes of `event.driveway_camera_event` and inspect `camera_event_type`, `camera_event_state`, `targets`, `channel` and `rule`. Unknown accepted vendor alarms still appear there; heartbeats are excluded.
 
-Use the snapshot camera entity for HA's standard camera actions. For live video, use a separate ONVIF/Generic Camera/Frigate entity. Siren, light, PTZ and camera-setting writes are not available in this integration.
+Discovered active-defense outputs use standard HA button actions. For example:
+
+```yaml
+actions:
+  - action: button.press
+    target:
+      entity_id: button.driveway_sound_audible_alarm
+```
+
+The buttons are momentary and intentionally have no ON/OFF state. Pressing one can make the camera sound or flash immediately. Use conditions, rate limits and deliberate user confirmation appropriate to the installation. Use the snapshot camera entity for HA's standard camera actions. For live video, use a separate ONVIF/Generic Camera/Frigate entity. PTZ and persistent camera-setting writes are not available.

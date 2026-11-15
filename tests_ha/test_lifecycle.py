@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from yarl import URL
 
-from custom_components.isapi_vision.api import Inventory
+from custom_components.isapi_vision.api import Inventory, OutputControl
 from custom_components.isapi_vision.const import DOMAIN
 from custom_components.isapi_vision.discovery import FeatureInfo
 from custom_components.isapi_vision.protocol import CameraEvent
@@ -27,6 +27,12 @@ async def test_setup_real_platforms_then_unload(hass, migrated):
         {},
         {},
         {"person": FeatureInfo("supported", True), "motion": FeatureInfo("supported", True)},
+        controls={
+            "audible_alarm": OutputControl(
+                ("/ISAPI/Event/triggers/notifications/AudioAlarm/1/test?format=json",),
+                "test capability",
+            )
+        },
     )
 
     async def events(connected):
@@ -40,6 +46,7 @@ async def test_setup_real_platforms_then_unload(hass, migrated):
         inventory=AsyncMock(return_value=inventory),
         events=events,
         snapshot=AsyncMock(return_value=b"\xff\xd8test\xff\xd9"),
+        activate_output=AsyncMock(),
     )
     entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST-SERIAL_1", data=DATA, title="Driveway")
     entry.add_to_hass(hass)
@@ -117,6 +124,13 @@ async def test_setup_real_platforms_then_unload(hass, migrated):
         assert hass.states.get("binary_sensor.driveway_person_detected") is None
     assert hass.states.get("camera.driveway_snapshot") is not None
     assert hass.states.get("event.driveway_camera_event") is not None
+    alarm_button = hass.states.get("button.driveway_sound_audible_alarm")
+    assert alarm_button is not None
+    assert alarm_button.attributes["command_type"] == "momentary_test"
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.driveway_sound_audible_alarm"}, blocking=True
+    )
+    client.activate_output.assert_awaited_once_with("audible_alarm")
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert coordinator._stream_task is None

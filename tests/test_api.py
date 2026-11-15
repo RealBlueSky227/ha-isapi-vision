@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import json
 import re
 import unittest
 from collections import Counter
@@ -20,6 +21,7 @@ class CameraServerTests(unittest.IsolatedAsyncioTestCase):
         self.stream_release = asyncio.Event()
         self.keep_stream = False
         self.valid_auths = 0
+        self.bodies = {}
         app = web.Application()
         app.router.add_route("*", "/{path:.*}", self.handle)
         self.runner = web.AppRunner(app)
@@ -54,7 +56,7 @@ class CameraServerTests(unittest.IsolatedAsyncioTestCase):
                     parts.get("nc", ""),
                     parts.get("cnonce", ""),
                     "auth",
-                    md5(f"{request.method}:{request.path}"),
+                    md5(f"{request.method}:{request.path_qs}"),
                 ]
             )
         )
@@ -69,6 +71,7 @@ class CameraServerTests(unittest.IsolatedAsyncioTestCase):
             )
         self.valid_auths += 1
         self.counts[request.path] += 1
+        self.bodies[(request.method, request.path)] = await request.read()
         if request.path in self.overrides:
             status, data = self.overrides[request.path]
             return web.Response(status=status, body=data)
@@ -142,6 +145,78 @@ class CameraServerTests(unittest.IsolatedAsyncioTestCase):
         result = await self.client.inventory()
         self.assertEqual(result.parameters, {})
         self.assertEqual(result.endpoints["status"], "http_500")
+
+    async def test_discovers_and_activates_selected_audio_alarm(self):
+        self.overrides["/ISAPI/Event/triggers/notifications/AudioAlarm/capabilities"] = (
+            200,
+            json.dumps({"AudioAlarmCap": {"isSupportAudioTest": True}}).encode(),
+        )
+        self.overrides["/ISAPI/Event/triggers/notifications/AudioAlarm"] = (
+            200,
+            json.dumps({"AudioAlarm": {"audioID": 7}}).encode(),
+        )
+        self.overrides["/ISAPI/Event/triggers/notifications/AudioAlarm/7/test"] = (
+            200,
+            json.dumps({"statusCode": 1, "subStatusCode": "ok"}).encode(),
+        )
+        result = await self.client.inventory()
+        self.assertEqual(result.controls["audible_alarm"].evidence, "isSupportAudioTest=true; selected audioID=7")
+        self.assertNotIn("audible_alarm", result.parameters)
+        self.assertNotIn(("PUT", "/ISAPI/Event/triggers/notifications/AudioAlarm/7/test"), self.bodies)
+        await self.client.activate_output("audible_alarm")
+        self.assertEqual(self.bodies[("PUT", "/ISAPI/Event/triggers/notifications/AudioAlarm/7/test")], b"")
+
+    async def test_discovers_channelled_strobe_and_tries_test_path_only_when_pressed(self):
+        capabilities = "/ISAPI/Event/triggers/notifications/channels/1/whiteLightAlarm/capabilities"
+        configuration = "/ISAPI/Event/triggers/notifications/channels/1/whiteLightAlarm"
+        test_path = configuration + "/test"
+        self.overrides[capabilities] = (200, b'{"WhiteLightAlarmCap":{"durationTime":{"@max":60}}}')
+        self.overrides[configuration] = (200, b'{"WhiteLightAlarm":{"channelID":1,"durationTime":15}}')
+        self.overrides[test_path] = (200, b'{"statusCode":1,"subStatusCode":"ok"}')
+        result = await self.client.inventory()
+        self.assertIn("flashing_alarm", result.controls)
+        self.assertNotIn(("PUT", test_path), self.bodies)
+        await self.client.activate_output("flashing_alarm")
+        self.assertIn(("PUT", test_path), self.bodies)
+
+    async def test_strobe_falls_back_from_channelled_test_path(self):
+        capabilities = "/ISAPI/Event/triggers/notifications/channels/1/whiteLightAlarm/capabilities"
+        configuration = "/ISAPI/Event/triggers/notifications/channels/1/whiteLightAlarm"
+        channel_test = configuration + "/test"
+        global_test = "/ISAPI/Event/triggers/notifications/whiteLightAlarm/test"
+        self.overrides[capabilities] = (200, b'{"WhiteLightAlarmCap":{"durationTime":{"@max":60}}}')
+        self.overrides[configuration] = (200, b'{"WhiteLightAlarm":{"channelID":1,"durationTime":15}}')
+        self.overrides[channel_test] = (200, b'{"statusCode":4,"subStatusCode":"notSupport"}')
+        self.overrides[global_test] = (200, b'{"statusCode":1,"subStatusCode":"ok"}')
+        await self.client.inventory()
+        await self.client.activate_output("flashing_alarm")
+        self.assertIn(("PUT", channel_test), self.bodies)
+        self.assertIn(("PUT", global_test), self.bodies)
+
+    async def test_does_not_create_controls_from_configuration_alone(self):
+        self.overrides["/ISAPI/Event/triggers/notifications/AudioAlarm"] = (
+            200,
+            b'{"AudioAlarm":{"audioID":7}}',
+        )
+        result = await self.client.inventory()
+        self.assertNotIn("audible_alarm", result.controls)
+
+    async def test_output_command_rejects_camera_error_status(self):
+        self.overrides["/ISAPI/Event/triggers/notifications/AudioAlarm/capabilities"] = (
+            200,
+            b'{"AudioAlarmCap":{"isSupportAudioTest":true}}',
+        )
+        self.overrides["/ISAPI/Event/triggers/notifications/AudioAlarm"] = (
+            200,
+            b'{"AudioAlarm":{"audioID":3}}',
+        )
+        self.overrides["/ISAPI/Event/triggers/notifications/AudioAlarm/3/test"] = (
+            200,
+            b'{"statusCode":4,"subStatusCode":"notSupport"}',
+        )
+        await self.client.inventory()
+        with self.assertRaises(api.CameraError):
+            await self.client.activate_output("audible_alarm")
 
     async def test_error_xml_and_invalid_xml_report_unavailable(self):
         for payload in (b"<ResponseStatus><statusCode>4</statusCode></ResponseStatus>", b"<bad"):

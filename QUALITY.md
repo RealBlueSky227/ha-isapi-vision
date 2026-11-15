@@ -9,12 +9,12 @@ The integration follows a [Bronze self-audit](custom_components/isapi_vision/qua
 | Runtime/lifecycle | Typed config-entry runtime data; cancelled stream/ticker; removed event subscriptions and coordinator listeners; tests for unload/reload. |
 | Entities | Serial/channel-derived unique IDs; named entities; optional diagnostics disabled by default; supported-only detector creation. |
 | Dependencies | Empty runtime requirements: stdlib plus HA-provided libraries. No separate MQTT service or extra Python install at runtime. |
-| Safety | Read-only GET APIs, no redirects, Digest authentication, default certificate validation, bounded DTD-rejecting XML, sanitized diagnostics. |
+| Safety | GET-only discovery, explicit momentary output buttons, no redirects, Digest authentication, default certificate validation, bounded parsing and sanitized diagnostics. |
 | Documentation | Installation, upgrades, entities, automations, limitations, removal, security, contributing and compatibility reporting. |
 | Branding | Original camera artwork; local 256/512 PNGs in the integration `brand/` directory. |
 | Tests | Real HA 2026.10.2 config-flow/platform tests with 100% config-flow line coverage; standalone transport/protocol/discovery/debounce/migration tests. |
 | Public release | Official HACS Action and Hassfest without disabled checks; curated packaging; first release is explicitly a GitHub prerelease. |
 
-There are no integration-specific services/actions, device triggers or device conditions. Use standard sensor-state/event automations and native camera actions. Camera-write controls are outside this release.
+There are no integration-specific services/actions, device triggers or device conditions. Supported active-defense outputs use standard HA button entities. Discovery never activates them; their bounded PUT commands occur only after an explicit press.
 
 [CI results](https://github.com/RealBlueSky227/ha-isapi-vision/actions/workflows/ci.yml) · [Validation and remaining physical checks](VALIDATION.md) · [HACS catalog preparation](docs/HACS_SUBMISSION.md)

@@ -51,7 +51,7 @@ def validate():
     hacs = json.loads((ROOT / "hacs.json").read_text())
     assert manifest["domain"] == DOMAIN
     assert manifest["name"] == hacs["name"] == "ISAPI Vision"
-    assert manifest["version"] == project["version"] == "0.1.0b1"
+    assert manifest["version"] == project["version"] == "0.1.0b2"
     assert manifest["documentation"] == REPOSITORY + "/blob/main/README.md"
     assert manifest["issue_tracker"] == REPOSITORY + "/issues"
     assert manifest["iot_class"] == "local_push" and manifest["config_flow"] is True

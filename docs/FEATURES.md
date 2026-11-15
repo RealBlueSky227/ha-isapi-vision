@@ -16,8 +16,12 @@ For a device named `Driveway`, HA normally generates these IDs. Existing entity 
 | `sensor.driveway_last_event` | Bell | Last non-heartbeat alarm type and classified targets |
 | `event.driveway_camera_event` | Camera | Every accepted non-heartbeat alarm, including unknown vendor types |
 | `sensor.driveway_parameter_inventory` | List | Number of readable parameter/capability values, with endpoint status attributes |
+| `button.driveway_sound_audible_alarm` | `mdi:alarm-bell` | Play the camera's selected audible alarm test when supported |
+| `button.driveway_flash_alarm_light` | `mdi:alarm-light` | Run a white-light alarm test when the discovered firmware accepts a test path |
 
 Detection entities are created **only when discovered**. The table describes the available entity types; a camera will not necessarily get every detector. Newly discovered motion, person, vehicle, line-crossing, intrusion and region sensors are enabled by default. Tampering, video-loss, storage-fault and alarm-input sensors remain optional diagnostics, created disabled by default when supported. Existing entity IDs and user enable/disable choices are preserved.
+
+Active-defense buttons are also created only from positive capability/configuration reads. They are momentary actions and do not represent an ON/OFF state. Setup, reload and polling never press them. The audible command uses the selected `audioID`; no fixed siren ID is assumed. Flashing test paths vary by firmware, so a discovered button may still report a rejected command when the camera exposes configuration but no compatible manual test operation. The integration does not work around that by changing schedules or event linkage.
 
 ## Automatic feature discovery
 
@@ -56,7 +60,7 @@ Paste [the dashboard example](../examples/dashboard.yaml) into a manual dashboar
 
 ## Camera parameters
 
-The integration polls a bounded list of known read-only ISAPI endpoints every **120 seconds**, independently of immediate push detections. Areas include device status/uptime, time, capabilities, streaming codec/resolution/FPS configuration, image/night-mode settings, audio, motion/tamper settings, smart events, recording, storage, IO and network capabilities.
+The integration polls a bounded list of known read-only ISAPI endpoints every **120 seconds**, independently of immediate push detections. Areas include device status/uptime, time, capabilities, streaming codec/resolution/FPS configuration, image/night-mode settings, audio, motion/tamper settings, smart events, recording, storage, IO and network capabilities. Active-defense discovery is GET-only; output PUT requests occur solely after an explicit button press.
 
 Every readable, non-sensitive XML scalar and capability attribute becomes an optional diagnostic sensor, created **disabled by default**. On the device page, expand disabled entities, select the desired parameter, and enable it. Parameters are string-valued direct API reports; camera-specific units or scales are not guessed. For example, a firmware's `maxFrameRate` may be encoded in hundredths of a frame per second.
 
@@ -72,4 +76,4 @@ Use the integration entry menu → **Reconfigure** to change the IP, HTTP port, 
 
 The I51HD returned **503 Device Busy** for `/ISAPI/Streaming/channels/101/picture` and a valid JPEG for `/ISAPI/Streaming/channels/102/picture`. The integration therefore prefers the lighter substream and falls back to the main stream if needed. Snapshots are fetched on demand, never included in diagnostic files.
 
-The included camera entity provides **snapshots**, not RTSP live video or audio. Keep an existing ONVIF/Generic Camera/Frigate camera entity for live video, and combine it with these detection tiles if desired. Siren/light/PTZ/configuration writes and firmware updates are outside this read-only version.
+The included camera entity provides **snapshots**, not RTSP live video or audio. Keep an existing ONVIF/Generic Camera/Frigate camera entity for live video, and combine it with these detection tiles if desired. Apart from capability-gated momentary audible/flashing tests, PTZ, persistent configuration writes and firmware updates are outside this version.

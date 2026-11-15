@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from .client import make_client
 from .coordinator import IsapiVisionCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.CAMERA, Platform.EVENT]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.CAMERA, Platform.EVENT, Platform.BUTTON]
 type IsapiVisionConfigEntry = ConfigEntry[IsapiVisionCoordinator]
 
 

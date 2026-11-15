@@ -17,6 +17,7 @@ This is an independent community integration. It is not endorsed by ANNKE, Hikvi
 - Capability-based discovery for line crossing, intrusion, region events, tampering, storage faults and alarm inputs. Missing APIs stay unknown, rather than being guessed unsupported from firmware/model names.
 - A native HA event entity that preserves accepted unmapped alarm types for automations.
 - Configurable off debounce after a trigger ends, plus a separate missing end-event timeout.
+- Capability-gated, momentary buttons for supported audible and flashing alarm output tests.
 - Device/event-stream connectivity, reconnect backoff, unavailable states and unload cleanup.
 - On-demand JPEG snapshots, parameter inventory, and optional diagnostic parameter sensors (disabled by default).
 - Multiple camera entries, per-channel monitoring, reauthentication, reconfiguration and sanitized diagnostics.
@@ -79,6 +80,8 @@ An older `annke_isapi` installation needs the [one-time stopped-HA domain migrat
 Enable the desired detection rules, arming schedules and **Notify Surveillance Center** linkage in the camera's own UI. The integration never enables or modifies camera rules.
 
 Use the entry's **Configure** options to set **Sensor off debounce (seconds)** (default 0) and **Missing end-event timeout** (default 10). Active detections update immediately. Debounce delays the LOW transition until the selected time after the trigger ends; a new active trigger cancels the pending LOW. Set the missing-end timeout to 0 to require explicit inactive notifications. Independent alarm sources are aggregated. Faults do not use the missing-end watchdog; connection loss makes detections unavailable immediately. The event entity is not debounced.
+
+If the camera positively exposes active-defense configuration and capabilities, the device page also gets **Sound audible alarm** and/or **Flash alarm light** buttons. They are momentary commands, not stateful switches: call `button.press` from an automation or another integration. Discovery and polling use GET only and never activate an output. Audible alarm activation uses the camera's currently selected `audioID`. The flashing button tries channelled and unchannelled firmware test-path variants; unsupported commands fail visibly and never rewrite the alarm schedule. Test these deliberately while on site and use them only in automations with appropriate safeguards.
 
 Use **Reconfigure** for an address, port, HTTPS or credential change. Leaving its password blank preserves the saved value; enter a replacement explicitly to change it. Camera serial/channel identity must match. Saved passwords are never prefilled into forms. Protect HA configuration storage and backups; see [credential handling](SECURITY.md).
 

@@ -2,7 +2,7 @@
 rules:
   action-setup:
     status: exempt
-    comment: This read-only integration registers no custom actions.
+    comment: The integration registers no custom actions; active-defense controls use standard button entities.
   appropriate-polling: done
   brands: done
   common-modules: done

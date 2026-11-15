@@ -34,7 +34,7 @@ Current release: https://github.com/RealBlueSky227/ha-isapi-vision/releases/tag/
 Successful HACS action: INSERT_EXACT_RELEASE_VALIDATION_RUN_URL
 Successful Hassfest action: INSERT_EXACT_RELEASE_VALIDATION_RUN_URL
 
-ISAPI Vision is a local, read-only, push-based camera integration using ISAPI.
+ISAPI Vision is a local, push-based camera integration using ISAPI. Discovery is read-only; supported active-defense outputs appear as explicit momentary button entities.
 It is a community beta developed on ANNKE FCD600 / I51HD, firmware V5.8.10.
 Other Hikvision-style ISAPI hardware is experimental. It uses its own domain
 and does not override a Home Assistant Core integration. I own the repository.
