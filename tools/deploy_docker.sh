@@ -26,14 +26,26 @@ fi
 docker compose run --rm --no-deps --entrypoint python \
   -v "$package_dir:/isapi-vision:ro" homeassistant \
   /isapi-vision/tools/migrate_domain.py --config /config --apply --ha-stopped
-sudo mkdir -p "$config_dir/backups" "$config_dir/custom_components"
-backup="$(sudo mktemp -d "$config_dir/backups/isapi-vision-code-XXXXXXXX")"
+direct_fs=false
+if [ -w "$config_dir" ] && [ -w "$config_dir/custom_components" ] \
+  && { [ ! -e "$config_dir/backups" ] || [ -w "$config_dir/backups" ]; }; then
+  direct_fs=true
+fi
+run_fs() {
+  if [ "$direct_fs" = true ]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+run_fs mkdir -p "$config_dir/backups" "$config_dir/custom_components"
+backup="$(run_fs mktemp -d "$config_dir/backups/isapi-vision-code-XXXXXXXX")"
 for domain in annke_isapi isapi_vision; do
   if [ -d "$config_dir/custom_components/$domain" ]; then
-    sudo mv -- "$config_dir/custom_components/$domain" "$backup/"
+    run_fs mv -- "$config_dir/custom_components/$domain" "$backup/"
   fi
 done
-sudo cp -a -- "$package_dir/custom_components/isapi_vision" "$config_dir/custom_components/"
+run_fs cp -a -- "$package_dir/custom_components/isapi_vision" "$config_dir/custom_components/"
 echo "Previous integration code: $backup"
 docker compose up -d --no-deps homeassistant
 docker compose logs --tail=60 homeassistant
