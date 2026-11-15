@@ -248,7 +248,9 @@ class IsapiVisionClient:
             await asyncio.gather(*tasks, return_exceptions=True)
         controls = await self._discover_output_controls(statuses, probes)
         self._last_controls = controls
-        return Inventory(device, parameters, statuses, discover_features(documents, self.channel, probes), probes, controls)
+        return Inventory(
+            device, parameters, statuses, discover_features(documents, self.channel, probes), probes, controls
+        )
 
     async def _discover_output_controls(
         self, statuses: dict[str, str], probes: dict[str, dict[str, str]]
@@ -303,9 +305,14 @@ class IsapiVisionClient:
         )
         try:
             async with asyncio.timeout(20):
-                (audio_caps, _), (audio_config, _), (strobe_caps, strobe_cap_path), (
-                    strobe_config,
-                    strobe_config_path,
+                (
+                    (audio_caps, _),
+                    (audio_config, _),
+                    (strobe_caps, strobe_cap_path),
+                    (
+                        strobe_config,
+                        strobe_config_path,
+                    ),
                 ) = await asyncio.gather(*requests)
         except TimeoutError:
             for key in ("audio_alarm_capabilities", "audio_alarm", "flashing_alarm_capabilities", "flashing_alarm"):
